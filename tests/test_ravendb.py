@@ -15,7 +15,7 @@ from ravendb.documents.commands.crud import PutDocumentCommand, GetDocumentsComm
 from ravendb import DocumentStore
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 DB_RECIPE_FILE = "ravendb_to_file_db.yml"
@@ -54,20 +54,20 @@ def get_container_ip(container_name=CONTAINER_NAME):
             print(client.containers)
             container = client.containers.get(container_name)
             ip = container.attrs["NetworkSettings"]["IPAddress"]
-            logging.debug(
+            logging.info(
                 f"Container with name {container_name} found. IP: {ip}"
             )
             time.sleep(60)
             set_container_ip(ip)
             return ip
         except docker.errors.NotFound:
-            logging.debug(f"Container with name '{container_name}' not found.")
+            logging.info(f"Container with name '{container_name}' not found.")
             raise docker.errors.NotFound
 
 
 def set_container_ip(value):
     global CONTAINER_IP
-    logging.debug(f"Setting container ip to: {value}")
+    logging.info(f"Setting container ip to: {value}")
     CONTAINER_IP = value
 
 
@@ -82,12 +82,12 @@ def is_container_running(container_name: str) -> bool:
     import docker
 
     client = docker.from_env()
+    
     try:
-        print("In is_container_running: ", container_name)
-        print(client)
-        print(client.containers)
+        # for c in client.containers.list(all=True):
+        #     logging.info(c.name)
         container = client.containers.get(container_name)
-        logging.debug(
+        logging.info(
             f"Container with name {container_name} found. Status: {container.status}"
         )
         time.sleep(60)
@@ -100,9 +100,11 @@ def is_container_running(container_name: str) -> bool:
 
 @pytest.fixture(scope="module")
 def ravendb_runner(docker_compose_runner, pytestconfig, test_resources_dir):
-    logging.debug("Start RavenDB runner")
+    logging.info("Start RavenDB runner")
+    compose_file = test_resources_dir / "docker-compose.yml"
+    logging.info(compose_file)
     with docker_compose_runner(
-        test_resources_dir / "docker-compose.yml", "ravendb"
+       compose_file, "ravendb"
     ) as docker_services:
         print("hier")
         wait_for_port(
@@ -116,7 +118,7 @@ def ravendb_runner(docker_compose_runner, pytestconfig, test_resources_dir):
 
 
 def load_document_store():
-    logging.debug(f"Loading document store of database '{TESTDB_NAME}'")
+    logging.info(f"Loading document store of database '{TESTDB_NAME}'")
     container_ip = get_container_ip()
     store = DocumentStore(
         f"http://{container_ip}:{RAVENDB_PORT}", TESTDB_NAME
@@ -128,7 +130,7 @@ def load_document_store():
 def remove_database():
     from ravendb.serverwide.operations.common import DeleteDatabaseOperation
 
-    logging.debug("Deleting databases")
+    logging.info("Deleting databases")
     store = load_document_store()
     store.maintenance.server.send(
         DeleteDatabaseOperation(database_name=TESTDB_NAME, hard_delete=True)
@@ -145,7 +147,7 @@ def prepare_database():
         PutIndexesOperation,
     )
 
-    logging.debug("Preparing databases")
+    logging.info("Preparing databases")
     store = load_document_store()
     request_executor = store.get_request_executor()
 
@@ -158,7 +160,7 @@ def prepare_database():
             return False
 
     if assert_entries_set():
-        logging.debug("Skipping task: Database is already prepared")
+        logging.info("Skipping task: Database is already prepared")
         return
 
     for i in range(5):
@@ -193,7 +195,7 @@ def prepare_database():
             },
         )
         request_executor.execute_command(put_command2)
-        logging.debug(f"Successfull iteration {i} of inserts.")
+        logging.info(f"Successfull iteration {i} of inserts.")
 
     # create index
     index = IndexDefinition()
@@ -217,18 +219,18 @@ def prepare_database():
     assert assert_entries_set()
     command = GetIndexOperation(index.name).get_command(store.conventions)
     request_executor.execute_command(command)
-    logging.debug(command.result.__dict__)
+    logging.info(command.result.__dict__)
     assert command.result != None
 
 
 def run_pipeline(tmp_path):
-    logging.debug(f"Run database with container id {get_container_ip()}")
+    logging.info(f"Run database with container id {get_container_ip()}")
     # Run the metadata ingestion pipeline.
     pipeline = Pipeline.create(
         {
             "run_id": "ravendb-test",
             "source": {
-                "type": "ravendb",
+                "type": "ravendb_datahub_source.metadata_ingestion.ravendb_source.RavenDBSource",
                 "config": {
                     "connect_uri": f"http://{get_container_ip()}:8080",
                     "collection_pattern":
@@ -379,10 +381,10 @@ def check_golden_file(output_file_path, golden_file_path, pytestconfig):
         i_golden = eval(i.replace("root", "golden").replace("\'", "\""))
         assert compare_strings(
             i_output, i_golden), f"Indexes ({indexes_out}) are different:\nOutput: {str(i_output)}\nGolden: {str(i_golden)}"
-    logging.debug(
+    logging.info(
         "Indexes are equal: Removing indexes from golden file check.")
     ignore_paths.extend(construct_key_regex(indexes_key_out))
-    logging.debug("Ignoring attributes during check:")
+    logging.info("Ignoring attributes during check:")
     [print(key) for key in ignore_paths]
 
     # Verify the output.

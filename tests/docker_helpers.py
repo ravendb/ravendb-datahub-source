@@ -10,6 +10,13 @@ logger = logging.getLogger(__name__)
 
 def is_responsive(container_name: str, port: int, hostname: Optional[str]) -> bool:
     """A cheap way to figure out if a port is responsive on a container"""
+    print("is_responsive: docker ps:")
+    ret = subprocess.run(
+        "docker ps",
+        shell=True,
+    )
+    print(ret)
+    print("performing check")
     if hostname:
         cmd = f"docker exec {container_name} /bin/bash -c 'echo -n > /dev/tcp/{hostname}/{port}'"
     else:
@@ -19,6 +26,7 @@ def is_responsive(container_name: str, port: int, hostname: Optional[str]) -> bo
         cmd,
         shell=True,
     )
+    print(ret)
     return ret.returncode == 0
 
 
@@ -51,23 +59,26 @@ def docker_compose_command():
     """Docker Compose command to use, it could be either `docker-compose`
     for Docker Compose v1 or `docker compose` for Docker Compose
     v2."""
-
-    return "docker-compose"
+    return "docker compose up -d"
 
 
 @pytest.fixture(scope="module")
 def docker_compose_runner(
     docker_compose_command,
     docker_compose_project_name, 
-    docker_setup=None, 
-    docker_cleanup=None
+    docker_setup, 
+    docker_cleanup
 ):
+
     @contextlib.contextmanager
     def run(
         compose_file_path: Union[str, list], 
         key: str, 
         cleanup: bool = True
     ) -> pytest_docker.plugin.Services:
+        logging.info(f"In docker_compose_runner with command: {docker_compose_command}")
+        logging.info(f"File path: {compose_file_path}")
+        logging.info(f"Docker setup: {docker_setup}")
         with pytest_docker.plugin.get_docker_services(
             docker_compose_command=docker_compose_command,
             docker_compose_file=compose_file_path,
