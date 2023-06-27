@@ -7,7 +7,8 @@ setup(
     author_email='Verena.Barth@viadee.com',
     description='RavenDB ingestion source for datahub',
     packages=find_packages(
-        exclude=["*.tests.*", "tests", "*.tests", "tests.*"]),
+        exclude=["*.tests.*", "tests", "*.tests", "tests.*"]
+    ),
     license="MIT",
     keywords=[
         "ravendb",
@@ -27,7 +28,8 @@ setup(
         "pytest>=6.2.3",
         "setuptools>=40.2.0",
         # "pytest-docker>=0.10.3,<0.12"
-        "pytest-docker>=1.0.1"
+        "pytest-docker>=1.0.1",
+        "deepdiff>=6.0.0"
         # Add any other dependencies your module requires
     ],
 )

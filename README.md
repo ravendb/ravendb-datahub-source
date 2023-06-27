@@ -9,7 +9,7 @@ Now you are able to just reference your ingestion source class as a type in the 
 
 ```
 source:
-  type: my-source.custom_ingestion_source.MySourceClass
+  type: ravendb_datahub_source.ravendb_source.RavenDBSource
   config:
   # place for your custom config defined in the configModel
 ```
@@ -43,7 +43,7 @@ pipeline = Pipeline.create(
   {
     "run_id": "ravendb-test",
     "source": {
-        "type": "ravendb_datahub_source.metadata_ingestion.ravendb_source.RavenDBSource",
+        "type": "ravendb_datahub_source.ravendb_source.RavenDBSource",
         "config": {
             "connect_uri": f"http://localhost:8080",
             "collection_pattern":
@@ -58,8 +58,7 @@ pipeline = Pipeline.create(
     "sink": {
       "type": "datahub-rest",
       "config": {
-          "server": "http://datahub-datahub-gms.datahub"
-                    ".svc.cluster.local:8080"
+          "server": "http://datahub-datahub-gms.datahub.svc.cluster.local:8080"
       }
     }
   }

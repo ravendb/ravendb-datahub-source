@@ -6,13 +6,13 @@ import os
 import ast
 import numpy as np
 import pytest
-
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Type, Union
+import deepdiff
+from typing import Dict, List, Optional, Union
 from docker_helpers import wait_for_port, docker_compose_runner
-
 from datahub.ingestion.run.pipeline import Pipeline
 from ravendb.documents.commands.crud import PutDocumentCommand, GetDocumentsCommand
 from ravendb import DocumentStore
+
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -82,7 +82,7 @@ def is_container_running(container_name: str) -> bool:
     import docker
 
     client = docker.from_env()
-    
+
     try:
         # for c in client.containers.list(all=True):
         #     logging.info(c.name)
@@ -104,7 +104,7 @@ def ravendb_runner(docker_compose_runner, pytestconfig, test_resources_dir):
     compose_file = test_resources_dir / "docker-compose.yml"
     logging.info(compose_file)
     with docker_compose_runner(
-       compose_file, "ravendb"
+        compose_file, "ravendb"
     ) as docker_services:
         print("hier")
         wait_for_port(
@@ -230,7 +230,7 @@ def run_pipeline(tmp_path):
         {
             "run_id": "ravendb-test",
             "source": {
-                "type": "ravendb_datahub_source.metadata_ingestion.ravendb_source.RavenDBSource",
+                "type": "ravendb_datahub_source.ravendb_source.RavenDBSource",
                 "config": {
                     "connect_uri": f"http://{get_container_ip()}:8080",
                     "collection_pattern":
@@ -313,6 +313,9 @@ def check_golden_file(output_file_path, golden_file_path, pytestconfig):
         return key_chains
 
     def construct_key_regex(keys_list, escape=True):
+        '''
+        Construct regex for ignoring keys
+        '''
         regex_list = []
 
         for keys in keys_list:
@@ -403,7 +406,8 @@ def load_json_file(filename: Union[str, os.PathLike]) -> object:
 
 def assert_mces_equal(
     output_path: Union[str, os.PathLike],
-    golden_path: Union[str, os.PathLike], ignore_paths: Optional[List[str]] = None
+    golden_path: Union[str, os.PathLike], 
+    ignore_paths: Optional[List[str]] = None
 ) -> None:
 
     output = load_json_file(output_path)
