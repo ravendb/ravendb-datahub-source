@@ -21,10 +21,10 @@ setup(
     install_requires=[
         'datahub >= 0.10.4',
         'ravendb >= 5.2.4',
-        "acryl_datahub==0.10.1",
+        "acryl_datahub>=0.10.1",
         # "docker_py==1.10.6",
         "numpy>=1.15.1",
-        "pydantic==1.9.1",
+        "pydantic>=1.9.1",
         "pytest>=6.2.3",
         "setuptools>=40.2.0",
         # "pytest-docker>=0.10.3,<0.12"
