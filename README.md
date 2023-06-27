@@ -29,6 +29,10 @@ The source recipe accepts the following attributes:
 * **remove_metadata_from_schema**: Whether to remove @metadata field from schema. Default: True
 * **max_schema_size** (Optional): Maximum number of fields to include in the schema. If the schema is downsampled, a report warning will appear and the "schema.downampled" dataset property will be "True". Default: 300
 * **env**: Environment to use in namespace when constructing URNs. Default: "PROD"
+* **certificate_file_path** (Optional): Path to RavenDB client certificate file
+* **trust_store_file_path** (Optional): Path to trust store file
+
+
 
 
 The *AllowDenyPattern* has the following structure:
